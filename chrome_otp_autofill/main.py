@@ -14,7 +14,6 @@ def main():
 
 def process_message(message, extractor, chrome_extension):
     # Extract potential 2FA code
-    print(message)
     code = extractor.extract_code(message)
     if code:
         # Send code to Chrome extension for autofill
