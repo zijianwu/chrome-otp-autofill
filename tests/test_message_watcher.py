@@ -42,3 +42,21 @@ def test_get_latest_message(mock_connect):
     # Verify database interaction
     mock_cursor.execute.assert_called_once_with("SELECT text FROM message ORDER BY ROWID DESC LIMIT 1")
 
+@patch('chrome_otp_autofill.message_watcher.sqlite3.connect')
+def test_watch_for_new_messages_no_duplicates(mock_connect, message_watcher, callback_mock):
+    # Mock the database connection and cursor
+    mock_cursor = mock_connect.return_value.cursor.return_value
+    mock_cursor.fetchone.side_effect = [
+        ("Your OTP code is 123456",),
+        ("Your OTP code is 123456",),
+        ("Your OTP code is 654321",)
+    ]
+
+    # Run the watch_for_new_messages method in a separate thread or process
+    with patch('time.sleep', return_value=None):
+        message_watcher.watch_for_new_messages(callback_mock)
+
+    # Verify that the callback was called only for unique messages
+    assert callback_mock.call_count == 2
+    callback_mock.assert_any_call("Your OTP code is 123456")
+    callback_mock.assert_any_call("Your OTP code is 654321")

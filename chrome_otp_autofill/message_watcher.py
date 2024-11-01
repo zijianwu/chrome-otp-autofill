@@ -8,12 +8,14 @@ class MessageWatcher:
     def __init__(self):
         self.conn = sqlite3.connect(CHAT_DB_PATH)
         self.cursor = self.conn.cursor()
+        self.last_sent_message = None
 
     def watch_for_new_messages(self, callback):
         while True:
             message = self.get_latest_message()
-            if message:
+            if message and message != self.last_sent_message:
                 callback(message)
+                self.last_sent_message = message
             time.sleep(0.25)
 
     def get_latest_message(self):
