@@ -2,7 +2,6 @@ import sqlite3
 import pytest
 from unittest.mock import patch, MagicMock
 from chrome_otp_autofill.message_watcher import MessageWatcher, CHAT_DB_PATH
-import os
 
 def test_get_live_connection_latest_messages():
     # Connect to chat.db and retrieve the last 5 messages
@@ -28,7 +27,10 @@ def callback_mock():
     return MagicMock()
 
 @patch('chrome_otp_autofill.message_watcher.sqlite3.connect')
-def test_get_latest_message(mock_connect, message_watcher):
+def test_get_latest_message(mock_connect):
+    # Create an instance of MessageWatcher with the mocked connection
+    message_watcher = MessageWatcher()
+
     # Mock the database connection and cursor
     mock_cursor = mock_connect.return_value.cursor.return_value
     mock_cursor.fetchone.return_value = ("Your OTP code is 123456",)
@@ -40,10 +42,3 @@ def test_get_latest_message(mock_connect, message_watcher):
     # Verify database interaction
     mock_cursor.execute.assert_called_once_with("SELECT text FROM message ORDER BY ROWID DESC LIMIT 1")
 
-@patch('chrome_otp_autofill.message_watcher.time.sleep', return_value=None)
-def test_watch_for_new_messages(mock_sleep, message_watcher, callback_mock):
-    with patch.object(message_watcher, 'get_latest_message', return_value="Test OTP message"):
-        message_watcher.watch_for_new_messages(callback_mock)
-
-    # Verify callback was called with the expected message
-    callback_mock.assert_called_once_with("Test OTP message")

@@ -18,7 +18,6 @@ def process_message(message, extractor, chrome_extension):
     code = extractor.extract_code(message)
     if code:
         # Send code to Chrome extension for autofill
-        print(code)
         chrome_extension.send_code_to_browser(code)
 
 if __name__ == "__main__":
